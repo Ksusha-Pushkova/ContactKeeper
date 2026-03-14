@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContactBook - {% block title %}Телефонная книга{% endblock %}</title>
+    <style>
+        :root {
+            --primary-color: #8B7355;
+            --secondary-color: #A58B6F;
+            --accent-color: #D4B28C;
+            --success-color: #6D8A7D;
+            --danger-color: #C46D6D;
+            --dark-color: #5C4B3A;
+            --light-bg: #F5F0E7;
+            --gray-color: #8A7F75;
+            --hover-color: #6D5840;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #F5F0E7 0%, #E8DECD 100%);
+            min-height: 100vh;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(92, 75, 58, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: var(--dark-color);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 0;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(92, 75, 58, 0.1);
+            margin-bottom: 20px;
+            border: 1px solid var(--accent-color);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 0;
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(139, 115, 85, 0.3);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #a55a5a;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #567066;
+            transform: translateY(-2px);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #E8DECD;
+            border-radius: 0;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: #FDFAF5;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.1);
+            background: white;
+        }
+
+        .contact-table {
+            width: 100%;
+            background: white;
+            border-radius: 0;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(92, 75, 58, 0.08);
+        }
+
+        .contact-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .contact-table td {
+            padding: 15px;
+            border-bottom: 1px solid #F0E8DD;
+        }
+
+        .contact-table tr:hover {
+            background: #FDF8F2;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 0;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background: #E8F0E9;
+            color: #2C4A3E;
+            border-left-color: var(--success-color);
+        }
+
+        .alert-error {
+            background: #FCE9E9;
+            color: #8B4B4B;
+            border-left-color: var(--danger-color);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #E8DECD;
+            border-radius: 0;
+            font-size: 1rem;
+            background: #FDFAF5;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .search-box button {
+            padding: 12px 30px;
+        }
+
+        .group-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .group-tag {
+            padding: 8px 20px;
+            background: #F0E8DD;
+            border-radius: 0;
+            text-decoration: none;
+            color: var(--dark-color);
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .group-tag:hover {
+            background: var(--accent-color);
+            color: var(--dark-color);
+        }
+
+        .group-tag.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .favorite-star {
+            color: #D4B28C;
+            font-size: 1.2rem;
+            margin-left: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .favorite-star:hover {
+            color: #B3936B;
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .nav-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .contact-table {
+                font-size: 0.9rem;
+            }
+            
+            .search-box {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="/" class="logo">
+                <span>ContactBook</span>
+            </a>
+            <div class="nav-links">
+                <a href="/">Главная</a>
+                <a href="/contact/add">Добавить контакт</a>
+                <a href="http://192.168.56.101:5050" target="_blank">PGAdmin</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(function(alert) {
+                alert.style.opacity = '0';
+                setTimeout(function() {
+                    alert.remove();
+                }, 300);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
