@@ -1,15 +1,13 @@
-version: '3.8'
-
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:18.3
     container_name: contactkeeper_db
     environment:
       POSTGRES_USER: ${DB_USER:-contactuser}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-SecurePass123}
       POSTGRES_DB: ${DB_NAME:-contactdb}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
