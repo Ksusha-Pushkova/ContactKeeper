@@ -28,9 +28,12 @@
         <div class="form-group">
             <label>Номер телефона *</label>
             <input type="tel" name="phone_number" class="form-control" required 
-                   value="{{ contact.phone_number }}"
-                   pattern="^\+7\s\(\d{3}\)\s\d{3}-\d{2}-\d{2}$">
-            <small style="color: var(--gray-color);">Формат: +7 (999) 123-45-67</small>
+                   value="{{ contact.formatted_phone }}"
+                   inputmode="tel"
+                   autocomplete="tel">
+            <small style="color: var(--gray-color);">
+                Вводите международный номер с кодом страны. Например: +1 202 555 0147 или +44 20 7946 0958
+            </small>
         </div>
         
         <div class="form-group">

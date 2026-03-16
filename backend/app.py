@@ -5,7 +5,7 @@ from database import db
 from models import (
     ALL_GROUPS_LABEL,
     CONTACT_GROUPS,
-    DEFAULT_CONTACT_GROUP,
+    ContactGroup,
     Contact,
     ContactRepository,
 )
@@ -19,6 +19,31 @@ contact_repo = ContactRepository(db)
 @app.context_processor
 def utility_processor():
     return dict(groups=CONTACT_GROUPS)
+
+def build_contact_from_form(form_data, contact_id=None, created_at=None, default_group=ContactGroup.GENERAL):
+    return Contact(
+        id=contact_id,
+        last_name=form_data['last_name'].strip(),
+        first_name=form_data['first_name'].strip(),
+        middle_name=form_data.get('middle_name', '').strip(),
+        phone_number=Contact.normalize_phone_number(form_data.get('phone_number', '')),
+        note=form_data.get('note', '').strip(),
+        contact_group=ContactGroup.parse(form_data.get('contact_group', default_group.value)),
+        is_favorite='is_favorite' in form_data,
+        created_at=created_at,
+        updated_at=None
+    )
+
+def get_contact_form_error_message(error, action):
+    error_text = str(error)
+
+    if isinstance(error, ValueError):
+        return error_text
+
+    if 'duplicate key value violates unique constraint' in error_text and 'phone_number' in error_text:
+        return 'Контакт с таким номером телефона уже существует.'
+
+    return f'Ошибка при {action}: {error_text}'
 
 @app.route('/')
 def index():
@@ -50,25 +75,13 @@ def view_contact(contact_id):
 def add_contact():
     if request.method == 'POST':
         try:
-            contact = Contact(
-                id=None,
-                last_name=request.form['last_name'],
-                first_name=request.form['first_name'],
-                middle_name=request.form.get('middle_name', ''),
-                phone_number=request.form['phone_number'],
-                note=request.form.get('note', ''),
-                contact_group=request.form.get('contact_group', DEFAULT_CONTACT_GROUP),
-                is_favorite='is_favorite' in request.form,
-                created_at=None,
-                updated_at=None
-            )
-            
+            contact = build_contact_from_form(request.form)
             contact_id = contact_repo.create(contact)
             flash(f'Контакт успешно добавлен!', 'success')
             return redirect(url_for('view_contact', contact_id=contact_id))
         
         except Exception as e:
-            flash(f'Ошибка при добавлении: {str(e)}', 'error')
+            flash(get_contact_form_error_message(e, 'добавлении'), 'error')
     
     return render_template('add.html', groups=CONTACT_GROUPS)
 
@@ -81,25 +94,18 @@ def edit_contact(contact_id):
     
     if request.method == 'POST':
         try:
-            updated_contact = Contact(
-                id=contact_id,
-                last_name=request.form['last_name'],
-                first_name=request.form['first_name'],
-                middle_name=request.form.get('middle_name', ''),
-                phone_number=request.form['phone_number'],
-                note=request.form.get('note', ''),
-                contact_group=request.form.get('contact_group', contact.contact_group),
-                is_favorite='is_favorite' in request.form,
+            updated_contact = build_contact_from_form(
+                request.form,
+                contact_id=contact_id,
                 created_at=contact.created_at,
-                updated_at=None
+                default_group=contact.contact_group
             )
-            
             contact_repo.update(contact_id, updated_contact)
             flash('Контакт успешно обновлён!', 'success')
             return redirect(url_for('view_contact', contact_id=contact_id))
         
         except Exception as e:
-            flash(f'Ошибка при обновлении: {str(e)}', 'error')
+            flash(get_contact_form_error_message(e, 'обновлении'), 'error')
     
     return render_template('edit.html', contact=contact, groups=CONTACT_GROUPS)
 
@@ -143,7 +149,7 @@ def api_contacts():
         'full_name': c.full_name,
         'phone': c.formatted_phone,
         'note': c.note,
-        'group': c.contact_group,
+        'group': c.contact_group.value,
         'is_favorite': c.is_favorite
     } for c in contacts])
 
