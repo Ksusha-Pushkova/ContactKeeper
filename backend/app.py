@@ -136,11 +136,25 @@ def api_contacts():
 
 @app.errorhandler(404)
 def not_found_error(error):
-    return render_template('404.html'), 404
+    return render_template(
+        'error.html',
+        error_code=404,
+        title='Страница не найдена',
+        message='Запрошенная страница не существует или была перемещена.',
+        action_url=url_for('index'),
+        action_text='Вернуться на главную'
+    ), 404
 
 @app.errorhandler(500)
 def internal_error(error):
-    return render_template('500.html'), 500
+    return render_template(
+        'error.html',
+        error_code=500,
+        title='Ошибка сервера',
+        message='Во время обработки запроса произошла внутренняя ошибка. Попробуйте повторить действие позже.',
+        action_url=url_for('index'),
+        action_text='Открыть главную'
+    ), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
