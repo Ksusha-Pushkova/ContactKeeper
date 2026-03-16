@@ -2,22 +2,27 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from dotenv import load_dotenv
 from database import db
-from models import Contact, ContactRepository
+from models import (
+    ALL_GROUPS_LABEL,
+    CONTACT_GROUPS,
+    DEFAULT_CONTACT_GROUP,
+    Contact,
+    ContactRepository,
+)
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 contact_repo = ContactRepository(db)
-DEFAULT_GROUPS = ['Друзья', 'Работа', 'Семья', 'Сервис', 'Соседи', 'Другое']
 
 @app.context_processor
 def utility_processor():
-    return dict(groups=DEFAULT_GROUPS)
+    return dict(groups=CONTACT_GROUPS)
 
 @app.route('/')
 def index():
-    group = request.args.get('group', 'Все')
+    group = request.args.get('group', ALL_GROUPS_LABEL)
     search = request.args.get('search', '')
     
     contacts = contact_repo.get_all(group=group, search=search)
@@ -52,7 +57,7 @@ def add_contact():
                 middle_name=request.form.get('middle_name', ''),
                 phone_number=request.form['phone_number'],
                 note=request.form.get('note', ''),
-                contact_group=request.form.get('contact_group', 'Друзья'),
+                contact_group=request.form.get('contact_group', DEFAULT_CONTACT_GROUP),
                 is_favorite='is_favorite' in request.form,
                 created_at=None,
                 updated_at=None
@@ -65,7 +70,7 @@ def add_contact():
         except Exception as e:
             flash(f'Ошибка при добавлении: {str(e)}', 'error')
     
-    return render_template('add.html', groups=DEFAULT_GROUPS)
+    return render_template('add.html', groups=CONTACT_GROUPS)
 
 @app.route('/contact/<int:contact_id>/edit', methods=['GET', 'POST'])
 def edit_contact(contact_id):
@@ -96,7 +101,7 @@ def edit_contact(contact_id):
         except Exception as e:
             flash(f'Ошибка при обновлении: {str(e)}', 'error')
     
-    return render_template('edit.html', contact=contact, groups=DEFAULT_GROUPS)
+    return render_template('edit.html', contact=contact, groups=CONTACT_GROUPS)
 
 @app.route('/contact/<int:contact_id>/delete', methods=['POST'])
 def delete_contact(contact_id):
@@ -111,7 +116,14 @@ def delete_contact(contact_id):
 @app.route('/contact/<int:contact_id>/favorite', methods=['POST'])
 def toggle_favorite(contact_id):
     try:
-        contact_repo.toggle_favorite(contact_id)
+        updated = contact_repo.toggle_favorite(contact_id)
+        if not updated:
+            message = 'Контакт не найден'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'success': False, 'error': message}), 404
+            flash(message, 'error')
+            return redirect(request.referrer or url_for('index'))
+
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({'success': True})
     except Exception as e:
@@ -122,7 +134,7 @@ def toggle_favorite(contact_id):
 
 @app.route('/api/contacts')
 def api_contacts():
-    group = request.args.get('group', 'Все')
+    group = request.args.get('group', ALL_GROUPS_LABEL)
     search = request.args.get('search', '')
     
     contacts = contact_repo.get_all(group=group, search=search)
@@ -130,6 +142,7 @@ def api_contacts():
         'id': c.id,
         'full_name': c.full_name,
         'phone': c.formatted_phone,
+        'note': c.note,
         'group': c.contact_group,
         'is_favorite': c.is_favorite
     } for c in contacts])

@@ -49,7 +49,7 @@
         }
 
         .nav-content {
-            max-width: 1200px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 0 20px;
             display: flex;
@@ -280,6 +280,25 @@
             margin-left: 5px;
             cursor: pointer;
             transition: all 0.3s;
+        }
+
+        .favorite-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin-left: 6px;
+            border: none;
+            background: transparent;
+            line-height: 1;
+        }
+
+        .favorite-star.is-active {
+            color: #D4B28C;
+        }
+
+        .favorite-star.is-inactive {
+            color: var(--gray-color);
         }
 
         .favorite-star:hover {

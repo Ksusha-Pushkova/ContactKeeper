@@ -3,6 +3,18 @@ from typing import Optional, List
 from datetime import datetime
 import re
 
+ALL_GROUPS_LABEL = 'Все'
+DEFAULT_CONTACT_GROUP = 'Общие'
+CONTACT_GROUPS = [
+    DEFAULT_CONTACT_GROUP,
+    'Друзья',
+    'Работа',
+    'Семья',
+    'Сервис',
+    'Соседи',
+    'Другое',
+]
+
 @dataclass
 class Contact:
     id: Optional[int]
@@ -26,7 +38,7 @@ class Contact:
     @property
     def formatted_phone(self) -> str:
         digits = re.sub(r'\D', '', self.phone_number)
-        
+
         if len(digits) == 11:
             return f"+7 ({digits[1:4]}) {digits[4:7]}-{digits[7:9]}-{digits[9:11]}"
         return self.phone_number
@@ -40,26 +52,24 @@ class Contact:
             middle_name=data.get('middle_name'),
             phone_number=data['phone_number'],
             note=data.get('note'),
-            contact_group=data.get('contact_group', 'Общие'),
+            contact_group=data.get('contact_group', DEFAULT_CONTACT_GROUP),
             is_favorite=data.get('is_favorite', False),
             created_at=data.get('created_at'),
             updated_at=data.get('updated_at')
         )
 
 class ContactRepository:
-
-    
     def __init__(self, db):
         self.db = db
 
     def get_all(self, group: Optional[str] = None, search: Optional[str] = None) -> List[Contact]:
         query = "SELECT * FROM contacts WHERE 1=1"
         params = []
-        
-        if group and group != 'Все':
+
+        if group and group != ALL_GROUPS_LABEL:
             query += " AND contact_group = %s"
             params.append(group)
-        
+
         if search:
             query += """ AND (
                 last_name ILIKE %s OR 
@@ -69,9 +79,9 @@ class ContactRepository:
             )"""
             search_pattern = f'%{search}%'
             params.extend([search_pattern, search_pattern, search_pattern, search_pattern])
-        
+
         query += " ORDER BY is_favorite DESC, last_name, first_name"
-        
+
         results = self.db.execute_query(query, params, fetch_all=True)
         return [Contact.from_dict(row) for row in results]
 
@@ -119,9 +129,16 @@ class ContactRepository:
     def get_groups(self) -> List[str]:
         query = "SELECT DISTINCT contact_group FROM contacts ORDER BY contact_group"
         results = self.db.execute_query(query, fetch_all=True)
-        return ['Все'] + [row['contact_group'] for row in results]
+        existing_groups = [row['contact_group'] for row in results]
+        ordered_groups = list(CONTACT_GROUPS)
+
+        for group in existing_groups:
+            if group not in ordered_groups:
+                ordered_groups.append(group)
+
+        return [ALL_GROUPS_LABEL] + ordered_groups
 
     def toggle_favorite(self, contact_id: int) -> bool:
         query = "UPDATE contacts SET is_favorite = NOT is_favorite WHERE id = %s"
-        self.db.execute_query(query, (contact_id,))
-        return True
+        updated_rows = self.db.execute_query(query, (contact_id,), return_rowcount=True)
+        return updated_rows > 0

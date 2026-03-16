@@ -7,9 +7,15 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h1>
             {{ contact.full_name }}
-            {% if contact.is_favorite %}
-                <span class="favorite-star"></span>
-            {% endif %}
+            <form method="POST" action="/contact/{{ contact.id }}/favorite" style="display: inline;">
+                <button type="submit"
+                        class="favorite-toggle"
+                        title="{% if contact.is_favorite %}Убрать из избранного{% else %}Добавить в избранное{% endif %}">
+                    <span class="favorite-star {% if contact.is_favorite %}is-active{% else %}is-inactive{% endif %}">
+                        {% if contact.is_favorite %}★{% else %}☆{% endif %}
+                    </span>
+                </button>
+            </form>
         </h1>
         <div>
             <a href="/contact/{{ contact.id }}/edit" class="btn btn-success">Редактировать</a>
@@ -36,8 +42,8 @@
             </td>
         </tr>
         <tr>
-            <td style="padding: 10px; background: #f5f5f5;"><strong>Дата рождения:</strong></td>
-            <td style="padding: 10px;">{{ contact.birth_date or '—' }}</td>
+            <td style="padding: 10px; background: #f5f5f5;"><strong>Заметка:</strong></td>
+            <td style="padding: 10px;">{{ contact.note or '—' }}</td>
         </tr>
         <tr>
             <td style="padding: 10px; background: #f5f5f5;"><strong>Создан:</strong></td>

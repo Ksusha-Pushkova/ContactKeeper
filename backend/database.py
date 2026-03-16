@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class DatabaseConnection:
-    
     def __init__(self):
         self.connection_params = {
             'host': os.getenv('DB_HOST', 'postgres'),
@@ -39,16 +38,19 @@ class DatabaseConnection:
             if conn:
                 conn.close()
 
-    def execute_query(self, query, params=None, fetch_one=False, fetch_all=False):
+    def execute_query(self, query, params=None, fetch_one=False, fetch_all=False,
+            return_rowcount=False):
         for attempt in range(self.max_retries):
             try:
                 with self.get_cursor() as cur:
                     cur.execute(query, params or ())
-                    
+
                     if fetch_one:
                         return cur.fetchone()
                     elif fetch_all:
                         return cur.fetchall()
+                    elif return_rowcount:
+                        return cur.rowcount
                     else:
                         return None
             except Exception as e:

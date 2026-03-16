@@ -32,7 +32,7 @@
                 <th>ФИО</th>
                 <th>Телефон</th>
                 <th>Группа</th>
-                <th>Дата рождения</th>
+                <th>Заметка</th>
                 <th>Действия</th>
             </tr>
         </thead>
@@ -41,9 +41,15 @@
             <tr>
                 <td>
                     <strong>{{ contact.full_name }}</strong>
-                    {% if contact.is_favorite %}
-                        <span class="favorite-star"></span>
-                    {% endif %}
+                    <form method="POST" action="/contact/{{ contact.id }}/favorite" style="display: inline;">
+                        <button type="submit"
+                                class="favorite-toggle"
+                                title="{% if contact.is_favorite %}Убрать из избранного{% else %}Добавить в избранное{% endif %}">
+                            <span class="favorite-star {% if contact.is_favorite %}is-active{% else %}is-inactive{% endif %}">
+                                {% if contact.is_favorite %}★{% else %}☆{% endif %}
+                            </span>
+                        </button>
+                    </form>
                 </td>
                 <td>{{ contact.formatted_phone }}</td>
                 <td>
@@ -52,8 +58,8 @@
                     </span>
                 </td>
                 <td>
-                    {% if contact.birth_date %}
-                        {{ contact.birth_date }}
+                    {% if contact.note %}
+                        {{ contact.note|truncate(50, True, '...') }}
                     {% else %}
                         <span style="color: var(--gray-color);">—</span>
                     {% endif %}
@@ -78,27 +84,4 @@
     {% endif %}
 </div>
 
-<script>
-    document.querySelectorAll('.favorite-star').forEach(function(star) {
-        star.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const contactId = this.dataset.contactId;
-            
-            fetch(`/contact/${contactId}/favorite`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                }
-            });
-        });
-    });
-</script>
 {% endblock %}
